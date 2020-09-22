@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2020-05-31-preview",
+    "version": "2020-10-31",
     "title": "Azure Digital Twins API",
     "description": "A service for managing and querying digital twins and digital twin models."
   },
@@ -21,10 +21,10 @@
         "tags": [
           "Models"
         ],
-        "description": "Uploads one or more models. When any error occurs, no models are uploaded.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n409 (Conflict): One or more of the provided models already exist.",
+        "description": "Uploads one or more models. When any error occurs, no models are uploaded.\nStatus codes:\n* 201 Created\n* 400 Bad Request\n  * DTDLParserError - The models provided are not valid DTDL.\n  * InvalidArgument - The model id is invalid.\n  * LimitExceeded - The maximum number of model ids allowed in 'dependenciesFor' has been reached.\n  * ModelVersionNotSupported - The version of DTDL used is not supported.\n* 409 Conflict\n  * ModelAlreadyExists - The model provided already exists.",
         "operationId": "DigitalTwinModels_Add",
         "x-ms-examples": {
-          "ModelAdd": {
+          "Add models": {
             "$ref": "./examples/ModelAdd.json"
           }
         },
@@ -45,13 +45,16 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
           "201": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/NonPagedModelDataCollection"
+              "$ref": "#/definitions/NonPagedDigitalTwinsModelDataCollection"
             }
           },
           "default": {
@@ -66,16 +69,16 @@
         "tags": [
           "Models"
         ],
-        "description": "Retrieves model metadata and, optionally, model definitions.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.",
+        "description": "Retrieves model metadata and, optionally, model definitions.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The model id is invalid.\n  * LimitExceeded - The maximum number of model ids allowed in 'dependenciesFor' has been reached.\n* 404 Not Found\n  * ModelNotFound - The model was not found.",
         "x-ms-pageable": {
           "nextLinkName": "nextLink"
         },
         "operationId": "DigitalTwinModels_List",
         "x-ms-examples": {
-          "ModelsGet": {
+          "List models": {
             "$ref": "./examples/ModelsGet.json"
           },
-          "ModelsGetWithContextAndIncludeModelDefinition": {
+          "List models (include dependencies and definitions)": {
             "$ref": "./examples/ModelsGetWithDependenciesAndIncludeModelDefinition.json"
           }
         },
@@ -95,17 +98,20 @@
             "$ref": "#/parameters/includeModelDefinition"
           },
           {
-            "$ref": "#/parameters/max-item-count"
+            "$ref": "#/parameters/max-items-per-page"
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/PagedModelDataCollection"
+              "$ref": "#/definitions/PagedDigitalTwinsModelDataCollection"
             }
           },
           "default": {
@@ -122,13 +128,13 @@
         "tags": [
           "Models"
         ],
-        "description": "Retrieves model metadata and optionally the model definition.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is no model with the provided id.",
+        "description": "Retrieves model metadata and optionally the model definition.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The model id is invalid.\n  * MissingArgument - The model id was not provided.\n* 404 Not Found\n  * ModelNotFound - The model was not found.",
         "operationId": "DigitalTwinModels_GetById",
         "x-ms-examples": {
-          "ModelGetById": {
+          "Get a model by id": {
             "$ref": "./examples/ModelGetById.json"
           },
-          "ModelGetByIdWithIncludeModelDefinition": {
+          "Get a model by id (with definition)": {
             "$ref": "./examples/ModelGetByIdWithIncludeModelDefinition.json"
           }
         },
@@ -141,13 +147,16 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/ModelData"
+              "$ref": "#/definitions/DigitalTwinsModelData"
             }
           },
           "default": {
@@ -162,13 +171,13 @@
         "tags": [
           "Models"
         ],
-        "description": "Updates the metadata for a model.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no model with the provided id.",
+        "description": "Updates the metadata for a model.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The model id is invalid.\n  * JsonPatchInvalid - The JSON Patch provided is invalid.\n  * MissingArgument - The model id was not provided.\n* 404 Not Found\n  * ModelNotFound - The model was not found.\n* 409 Conflict\n  * ModelReferencesNotDecommissioned - The model refers to models that are not decommissioned.",
         "operationId": "DigitalTwinModels_Update",
         "consumes": [
           "application/json-patch+json"
         ],
         "x-ms-examples": {
-          "ModelUpdateDecommissioned": {
+          "Decommission a model": {
             "$ref": "./examples/ModelUpdateDecommissioned.json"
           }
         },
@@ -190,6 +199,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -209,9 +221,9 @@
           "Models"
         ],
         "operationId": "DigitalTwinModels_Delete",
-        "description": "Deletes a model. A model can only be deleted if no other models reference it.\nStatus codes:\n204 (No Content): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no model with the provided id.\n409 (Conflict): There are dependencies on the model that prevent it from being deleted.",
+        "description": "Deletes a model. A model can only be deleted if no other models reference it.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The model id is invalid.\n  * MissingArgument - The model id was not provided.\n* 404 Not Found\n  * ModelNotFound - The model was not found.\n* 409 Conflict\n  * ModelReferencesNotDeleted - The model refers to models that are not deleted.",
         "x-ms-examples": {
-          "DeleteModel": {
+          "Delete a model": {
             "$ref": "./examples/DeleteModel.json"
           }
         },
@@ -221,6 +233,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -242,15 +257,15 @@
           "Query"
         ],
         "operationId": "Query_QueryTwins",
-        "description": "Executes a query that allows traversing relationships and filtering by property values.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.",
+        "description": "Executes a query that allows traversing relationships and filtering by property values.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * BadRequest - The continuation token is invalid.\n  * SqlQueryError - The query contains some errors.\n* 429 Too Many Requests\n  * QuotaReachedError - The maximum query rate limit has been reached.",
         "x-ms-examples": {
-          "QueryFirstPage": {
+          "Query for digital twins": {
             "$ref": "./examples/QueryFirstPage.json"
           },
-          "QueryNextPage": {
+          "Retrieve paged query results": {
             "$ref": "./examples/QueryNextPage.json"
           },
-          "QueryJoin": {
+          "Query for digital twins through a relationship": {
             "$ref": "./examples/QueryJoin.json"
           }
         },
@@ -265,7 +280,13 @@
             }
           },
           {
+            "$ref": "#/parameters/max-items-per-page"
+          },
+          {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -296,9 +317,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_GetById",
-        "description": "Retrieves a digital twin.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Retrieves a digital twin.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.",
         "x-ms-examples": {
-          "GetTwin": {
+          "Get a digital twin by id": {
             "$ref": "./examples/GetTwin.json"
           }
         },
@@ -308,6 +329,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -336,12 +360,12 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_Add",
-        "description": "Adds or replaces a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n412 (Precondition Failed): The model is decommissioned or the digital twin already exists (when using If-None-Match: *).",
+        "description": "Adds or replaces a digital twin.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or payload is invalid.\n  * ModelDecommissioned - The model for the digital twin is decommissioned.\n  * TwinLimitReached - The maximum number of digital twins allowed has been reached.\n  * ValidationFailed - The digital twin payload is not valid.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "PutTwinBasicExample": {
+          "Add a digital twin": {
             "$ref": "./examples/PutTwinBasicExample.json"
           },
-          "PutTwinAdvancedExample": {
+          "Add a digital twin (with properties and components)": {
             "$ref": "./examples/PutTwinAdvancedExample.json"
           }
         },
@@ -363,6 +387,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -394,9 +421,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_Delete",
-        "description": "Deletes a digital twin. All relationships referencing the digital twin must already be deleted.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Deletes a digital twin. All relationships referencing the digital twin must already be deleted.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id is invalid.\n  * RelationshipsNotDeleted - The digital twin contains relationships.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "DeleteTwin": {
+          "Delete a digital twin": {
             "$ref": "./examples/DeleteTwin.json"
           }
         },
@@ -409,6 +436,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -428,15 +458,15 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_Update",
-        "description": "Updates a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Updates a digital twin.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or payload is invalid.\n  * JsonPatchInvalid - The JSON Patch provided is invalid.\n  * ValidationFailed - Applying the patch results in an invalid digital twin.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "consumes": [
           "application/json-patch+json"
         ],
         "x-ms-examples": {
-          "PatchTwinBasicExample": {
+          "Update a digital twin": {
             "$ref": "./examples/PatchTwinBasicExample.json"
           },
-          "PatchTwinAdvancedExample": {
+          "Update a digital twin (multiple updates)": {
             "$ref": "./examples/PatchTwinAdvancedExample.json"
           }
         },
@@ -461,6 +491,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -491,9 +524,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_GetRelationshipById",
-        "description": "Retrieves a relationship between two digital twins.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is either no digital twin or relationship with the provided id.",
+        "description": "Retrieves a relationship between two digital twins.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or relationship id is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * RelationshipNotFound - The relationship was not found.",
         "x-ms-examples": {
-          "GetRelationshipById": {
+          "Get a relationship by id": {
             "$ref": "./examples/GetRelationshipById.json"
           }
         },
@@ -506,6 +539,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -534,12 +570,12 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_AddRelationship",
-        "description": "Adds a relationship between two digital twins.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is either no digital twin, target digital twin, or relationship with the provided id.\n409 (Conflict): A relationship with the provided id already exists.",
+        "description": "Adds a relationship between two digital twins.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id, relationship id, or payload is invalid.\n  * InvalidRelationship - The relationship is invalid.\n  * OperationNotAllowed - The relationship cannot connect to the same digital twin.\n  * ValidationFailed - The relationship content is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * TargetTwinNotFound - The digital twin target of the relationship was not found.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "CreateRelationshipBasicExample": {
+          "Create a relationship": {
             "$ref": "./examples/CreateRelationshipBasicExample.json"
           },
-          "CreateRelationshipAdvancedExample": {
+          "Create a relationship (with properties)": {
             "$ref": "./examples/CreateRelationshipAdvancedExample.json"
           }
         },
@@ -554,7 +590,7 @@
             "name": "relationship",
             "in": "body",
             "description": "The data for the relationship.",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "object"
             }
@@ -564,6 +600,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -592,9 +631,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_DeleteRelationship",
-        "description": "Deletes a relationship between two digital twins.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is either no digital twin or relationship with the provided id.",
+        "description": "Deletes a relationship between two digital twins.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or relationship id is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * RelationshipNotFound - The relationship was not found.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "DeleteRelationship": {
+          "Delete a relationship": {
             "$ref": "./examples/DeleteRelationship.json"
           }
         },
@@ -610,6 +649,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -632,12 +674,12 @@
           "application/json-patch+json"
         ],
         "operationId": "DigitalTwins_UpdateRelationship",
-        "description": "Updates the properties on a relationship between two digital twins.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is either no digital twin or relationship with the provided id.",
+        "description": "Updates the properties on a relationship between two digital twins.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or relationship id is invalid.\n  * InvalidRelationship - The relationship is invalid.\n  * JsonPatchInvalid - The JSON Patch provided is invalid.\n  * ValidationFailed - The relationship content is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * RelationshipNotFound - The relationship was not found.\n* 409 Conflict\n  * RelationshipAlreadyExists - The relationship already exists.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "PatchRelationshipBasicExample": {
+          "Update relationship properties": {
             "$ref": "./examples/PatchRelationshipBasicExample.json"
           },
-          "PatchRelationshipAdvancedExample": {
+          "Update relationship properties (multiple updates)": {
             "$ref": "./examples/PatchRelationshipAdvancedExample.json"
           }
         },
@@ -652,7 +694,7 @@
             "name": "patchDocument",
             "description": "JSON Patch description of the update to the relationship properties.",
             "in": "body",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "array",
               "items": {
@@ -665,6 +707,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -692,15 +737,15 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_ListRelationships",
-        "description": "Retrieves the relationships from a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Retrieves the relationships from a digital twin.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.",
         "x-ms-pageable": {
           "nextLinkName": "nextLink"
         },
         "x-ms-examples": {
-          "GetRelationship": {
+          "List relationships": {
             "$ref": "./examples/GetRelationship.json"
           },
-          "GetRelationshipByName": {
+          "List relationships by name": {
             "$ref": "./examples/GetRelationshipByRelationshipName.json"
           }
         },
@@ -717,6 +762,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -741,12 +789,12 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_ListIncomingRelationships",
-        "description": "Retrieves all incoming relationship for a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Retrieves all incoming relationship for a digital twin.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.",
         "x-ms-pageable": {
           "nextLinkName": "nextLink"
         },
         "x-ms-examples": {
-          "GetIncomingRelationship": {
+          "List incoming relationships": {
             "$ref": "./examples/GetIncomingRelationship.json"
           }
         },
@@ -756,6 +804,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -780,9 +831,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_SendTelemetry",
-        "description": "Sends telemetry on behalf of a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is no digital twin with the provided id.",
+        "description": "Sends telemetry on behalf of a digital twin.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or message id is invalid.\n  * ValidationFailed - The telemetry content is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.",
         "x-ms-examples": {
-          "SendTelemetry": {
+          "Send telemetry": {
             "$ref": "./examples/SendTelemetry.json"
           }
         },
@@ -800,14 +851,14 @@
             }
           },
           {
-            "name": "dt-id",
+            "name": "Message-Id",
             "in": "header",
             "description": "A unique message identifier (in the scope of the digital twin id) that is commonly used for de-duplicating messages.",
             "required": true,
             "type": "string"
           },
           {
-            "name": "dt-timestamp",
+            "name": "Telemetry-Source-Time",
             "in": "header",
             "description": "An RFC 3339 timestamp that identifies the time the telemetry was measured.",
             "required": false,
@@ -815,6 +866,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -836,9 +890,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_SendComponentTelemetry",
-        "description": "Sends telemetry on behalf of a component in a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is either no digital twin with the provided id or the component path is invalid.",
+        "description": "Sends telemetry on behalf of a component in a digital twin.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id, message id, or component path is invalid.\n  * ValidationFailed - The telemetry content is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * ComponentNotFound - The component path was not found.",
         "x-ms-examples": {
-          "SendTelemetry": {
+          "Send telemetry in a component": {
             "$ref": "./examples/SendTelemetryFromComponent.json"
           }
         },
@@ -859,14 +913,14 @@
             }
           },
           {
-            "name": "dt-id",
+            "name": "Message-Id",
             "in": "header",
             "description": "A unique message identifier (in the scope of the digital twin id) that is commonly used for de-duplicating messages.",
             "required": true,
             "type": "string"
           },
           {
-            "name": "dt-timestamp",
+            "name": "Telemetry-Source-Time",
             "in": "header",
             "description": "An RFC 3339 timestamp that identifies the time the telemetry was measured.",
             "required": false,
@@ -874,6 +928,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -895,9 +952,9 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_GetComponent",
-        "description": "Retrieves a component from a digital twin.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is either no digital twin with the provided id or the component path is invalid.",
+        "description": "Retrieves a component from a digital twin.\nStatus codes:\n* 200 OK\n* 400 Bad Request\n  * InvalidArgument - The digital twin id or component path is invalid.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n  * ComponentNotFound - The component path was not found.",
         "x-ms-examples": {
-          "GetComponent": {
+          "Get a component in a digital twin": {
             "$ref": "./examples/GetComponent.json"
           }
         },
@@ -910,6 +967,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -938,12 +998,12 @@
           "Twins"
         ],
         "operationId": "DigitalTwins_UpdateComponent",
-        "description": "Updates a component on a digital twin.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.\n404 (Not Found): There is either no digital twin with the provided id or the component path is invalid.",
+        "description": "Updates a component on a digital twin.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * InvalidArgument - The digital twin id, component path, or payload is invalid.\n  * JsonPatchInvalid - The JSON Patch provided is invalid.\n  * ValidationFailed - Applying the patch results in an invalid digital twin.\n* 404 Not Found\n  * DigitalTwinNotFound - The digital twin was not found.\n* 412 Precondition Failed\n  * PreconditionFailed - The precondition check (If-Match or If-None-Match) failed.",
         "x-ms-examples": {
-          "PatchComponentBasicExample": {
+          "Update a component in a digital twin": {
             "$ref": "./examples/PatchComponentBasicExample.json"
           },
-          "PatchComponentAdvancedExample": {
+          "Update a component in a digital twin (multiple updates)": {
             "$ref": "./examples/PatchComponentAdvancedExample.json"
           }
         },
@@ -961,7 +1021,7 @@
             "name": "patchDocument",
             "description": "An update specification described by JSON Patch. Updates to property values and $model elements may happen in the same request. Operations are limited to add, replace and remove.",
             "in": "body",
-            "required": false,
+            "required": true,
             "schema": {
               "type": "array",
               "items": {
@@ -974,6 +1034,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -1003,19 +1066,22 @@
         "tags": [
           "EventRoutes"
         ],
-        "description": "Retrieves all event routes.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.",
+        "description": "Retrieves all event routes.\nStatus codes:\n* 200 OK",
         "operationId": "EventRoutes_List",
         "x-ms-examples": {
-          "EventRoutesList": {
+          "List event routes": {
             "$ref": "./examples/EventRoutesList.json"
           }
         },
         "parameters": [
           {
-            "$ref": "#/parameters/max-item-count"
+            "$ref": "#/parameters/max-items-per-page"
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -1042,10 +1108,10 @@
         "tags": [
           "EventRoutes"
         ],
-        "description": "Retrieves an event route.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is no event route with the provided id.",
+        "description": "Retrieves an event route.\nStatus codes:\n* 200 OK\n* 404 Not Found\n  * EventRouteNotFound - The event route was not found.",
         "operationId": "EventRoutes_GetById",
         "x-ms-examples": {
-          "EventRouteGet": {
+          "Get an event route by id": {
             "$ref": "./examples/EventRouteGet.json"
           }
         },
@@ -1055,6 +1121,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -1076,13 +1145,13 @@
         "tags": [
           "EventRoutes"
         ],
-        "description": "Adds or replaces an event route.\nStatus codes:\n200 (OK): Success.\n400 (Bad Request): The request is invalid.",
+        "description": "Adds or replaces an event route.\nStatus codes:\n* 204 No Content\n* 400 Bad Request\n  * EventRouteEndpointInvalid - The endpoint provided does not exist or is not active.\n  * EventRouteFilterInvalid - The event route filter is invalid.\n  * EventRouteIdInvalid - The event route id is invalid.\n  * LimitExceeded - The maximum number of event routes allowed has been reached.",
         "operationId": "EventRoutes_Add",
         "x-ms-examples": {
-          "EventRoutePut": {
+          "Add an event route": {
             "$ref": "./examples/EventRoutePut.json"
           },
-          "EventRouteWithFilter": {
+          "Add an event route (with filter)": {
             "$ref": "./examples/EventRoutePutWithFilter.json"
           }
         },
@@ -1100,6 +1169,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -1118,10 +1190,10 @@
         "tags": [
           "EventRoutes"
         ],
-        "description": "Deletes an event route.\nStatus codes:\n200 (OK): Success.\n404 (Not Found): There is no event route with the provided id.",
+        "description": "Deletes an event route.\nStatus codes:\n* 204 No Content\n* 404 Not Found\n  * EventRouteNotFound - The event route was not found.",
         "operationId": "EventRoutes_Delete",
         "x-ms-examples": {
-          "EventRouteDelete": {
+          "Delete an event route": {
             "$ref": "./examples/EventRouteDelete.json"
           }
         },
@@ -1131,6 +1203,9 @@
           },
           {
             "$ref": "#/parameters/api-version"
+          },
+          {
+            "$ref": "#/parameters/traceparent"
           }
         ],
         "responses": {
@@ -1152,7 +1227,8 @@
       "description": "A route which directs notification and telemetry events to an endpoint. Endpoints are a destination outside of Azure Digital Twins such as an EventHub.",
       "type": "object",
       "required": [
-        "endpointName"
+        "endpointName",
+        "filter"
       ],
       "properties": {
         "id": {
@@ -1187,22 +1263,22 @@
         }
       }
     },
-    "NonPagedModelDataCollection": {
-      "description": "A collection of ModelData objects.",
+    "NonPagedDigitalTwinsModelDataCollection": {
+      "description": "A collection of DigitalTwinsModelData objects.",
       "type": "array",
       "items": {
-        "$ref": "#/definitions/ModelData"
+        "$ref": "#/definitions/DigitalTwinsModelData"
       }
     },
-    "PagedModelDataCollection": {
-      "description": "A collection of ModelData objects.",
+    "PagedDigitalTwinsModelDataCollection": {
+      "description": "A collection of DigitalTwinsModelData objects.",
       "type": "object",
       "properties": {
         "value": {
-          "description": "The ModelData objects.",
+          "description": "The DigitalTwinsModelData objects.",
           "type": "array",
           "items": {
-            "$ref": "#/definitions/ModelData"
+            "$ref": "#/definitions/DigitalTwinsModelData"
           }
         },
         "nextLink": {
@@ -1211,7 +1287,7 @@
         }
       }
     },
-    "ModelData": {
+    "DigitalTwinsModelData": {
       "description": "A model definition and metadata for that model.",
       "required": [
         "id"
@@ -1326,7 +1402,7 @@
       "description": "The results of a query operation and an optional continuation token.",
       "type": "object",
       "properties": {
-        "items": {
+        "value": {
           "description": "The query results.",
           "type": "array",
           "items": {
@@ -1453,17 +1529,16 @@
       "required": true,
       "type": "string",
       "enum": [
-        "2020-05-31-preview"
+        "2020-10-31"
       ]
     },
-    "max-item-count": {
-      "name": "x-ms-max-item-count",
+    "max-items-per-page": {
+      "name": "max-items-per-page",
       "in": "header",
-      "description": "The maximum number of items to retrieve per request. The server may choose to return less than the requested max.",
+      "description": "The maximum number of items to retrieve per request. The server may choose to return less than the requested number.",
       "required": false,
       "type": "integer",
-      "default": -1,
-      "x-ms-client-name": "MaxItemCount",
+      "x-ms-client-name": "MaxItemsPerPage",
       "x-ms-parameter-location": "method",
       "x-ms-parameter-grouping": {
         "postfix": "Options"
@@ -1487,6 +1562,17 @@
       "required": false,
       "type": "string",
       "x-ms-parameter-location": "method"
+    },
+    "traceparent": {
+      "name": "traceparent",
+      "in": "header",
+      "description": "Identifies the request in a distributed tracing system.",
+      "required": false,
+      "type": "string",
+      "x-ms-parameter-location": "method",
+      "x-ms-parameter-grouping": {
+        "postfix": "Options"
+      }
     }
   },
   "security": [
