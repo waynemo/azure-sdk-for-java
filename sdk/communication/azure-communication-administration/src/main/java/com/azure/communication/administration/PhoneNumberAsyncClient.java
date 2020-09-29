@@ -41,6 +41,7 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.azure.core.util.FluxUtil.monoError;
@@ -117,6 +118,7 @@ public final class PhoneNumberAsyncClient {
     Mono<Response<AreaCodes>> getAllAreaCodesWithResponse(
         String locationType, String countryCode, String phonePlanId, List<LocationOptionsQuery> locationOptions,
         Context context) {
+        Objects.requireNonNull(locationType, "'locationType' cannot be null.");
         LocationOptionsQueries locationOptionsQueries = new LocationOptionsQueries();
         locationOptionsQueries.setLocationOptions(locationOptions);
 
